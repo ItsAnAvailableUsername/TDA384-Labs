@@ -1,4 +1,18 @@
 # 编译产物
+CCHAT/cchat.beam
+CCHAT/channel.beam
+CCHAT/client.beam
+CCHAT/dummy_gui.beam
+CCHAT/genserver.beam
+CCHAT/grm.beam
+CCHAT/gui.beam
+CCHAT/lex.beam
+CCHAT/lexgrm.beam
+CCHAT/lib/grm.erl
+CCHAT/lib/lex.erl
+server.beam
+test_client.beam
+tui.beam
 .direnv
 *.class
 *.jar
