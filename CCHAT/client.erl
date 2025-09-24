@@ -31,21 +31,33 @@ initial_state(Nick, GUIAtom, ServerAtom) ->
 
 % Join channel
 handle(St, {join, Channel}) ->
-    % TODO: Implement this function
-    % {reply, ok, St} ;
-    {reply, {error, not_implemented, "join not implemented"}, St};
+    try genserver:request(St#client_st.server, {join, Channel, self()}) of
+        ok -> {reply, ok, St};
+        user_already_joined -> {reply, {error, user_already_joined, "Error Code 0"}, St}
+    catch
+        throw:timeout_error -> {reply, {error, server_not_reached, "Error Code 1"}, St};
+        error:badarg -> {reply, {error, server_not_reached, "Error Code 2"}, St}
+    end;
 
 % Leave channel
 handle(St, {leave, Channel}) ->
-    % TODO: Implement this function
-    % {reply, ok, St} ;
-    {reply, {error, not_implemented, "leave not implemented"}, St};
+    try genserver:request(list_to_atom(Channel), {leave, self()}) of
+        ok -> {reply, ok, St};
+        user_not_joined -> {reply, {error, user_not_joined, "Error code 3"}, St}
+    catch
+        throw:timeout_error -> {reply, {error, user_not_joined, "Error code 4"}, St};
+        error:badarg -> {reply, {error, user_not_joined, "Error code 5"}, St}
+    end;
 
 % Sending message (from GUI, to channel)
 handle(St, {message_send, Channel, Msg}) ->
-    % TODO: Implement this function
-    % {reply, ok, St} ;
-    {reply, {error, not_implemented, "message sending not implemented"}, St};
+    try genserver:request(list_to_atom(Channel), {message_send, St#client_st.nick, Msg, self()}) of
+        ok -> {reply, ok, St};
+        user_not_joined -> {reply, {error, user_not_joined, "Error code 6"}, St}
+    catch
+        throw:timeout_error -> {reply, {error, server_not_reached, "Error code 7"}, St};
+        error:badarg -> {reply, {error, server_not_reached, "Error code 8"}, St}
+    end;
 
 % This case is only relevant for the distinction assignment!
 % Change nick (no check, local only)
@@ -71,5 +83,5 @@ handle(St, quit) ->
     {reply, ok, St};
 
 % Catch-all for any unhandled requests
-handle(St, Data) ->
+handle(St, _) ->
     {reply, {error, not_implemented, "Client does not handle this command"}, St}.
