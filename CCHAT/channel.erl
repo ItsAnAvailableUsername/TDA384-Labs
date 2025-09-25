@@ -30,6 +30,32 @@ handle(St, {message_send, Nick, Msg, ClientPid}) ->
     case lists:member(ClientPid, ClientPids) of
         false -> {reply, user_not_joined, St};
         true ->
-            [ genserver:request(ClientPidPrime, {message_receive, St#channel_st.name, Nick, Msg}) || ClientPidPrime <- lists:delete(ClientPid, ClientPids) ],
+            ClientPidsPrime = lists:delete(ClientPid, ClientPids),
+
+            % Spawn 1 process, then respond.
+            %
+            % spawn(fun() ->
+            %     lists:foreach(fun(ClientPidPrime) ->
+            %         genserver:request(ClientPidPrime, {message_receive, St#channel_st.name, Nick, Msg})
+            %     end, ClientPidsPrime)
+            % end),
+
+            % Spawn length(ClientPidsPrime) processes, then respond.
+            %
+            % lists:foreach(fun(ClientPidPrime) ->
+            %     spawn(fun() ->
+            %         genserver:request(ClientPidPrime, {message_receive, St#channel_st.name, Nick, Msg})
+            %     end)
+            % end, ClientPidsPrime),
+
+            % Spawn 1 process, then respond. The spawned process, in turn, spawns length(ClientPidsPrime) processes.
+            spawn(fun() ->
+                lists:foreach(fun(ClientPidPrime) ->
+                    spawn(fun() ->
+                        genserver:request(ClientPidPrime, {message_receive, St#channel_st.name, Nick, Msg})
+                    end)
+                end, ClientPidsPrime)
+            end),
+
             {reply, ok, St}
     end.
