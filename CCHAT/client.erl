@@ -45,8 +45,8 @@ handle(St, {leave, Channel}) ->
         ok -> {reply, ok, St};
         user_not_joined -> {reply, {error, user_not_joined, "Error code 3"}, St}
     catch
-        throw:timeout_error -> {reply, {error, user_not_joined, "Error code 4"}, St};
-        error:badarg -> {reply, {error, user_not_joined, "Error code 5"}, St}
+        throw:timeout_error -> {reply, {error, server_not_reached, "Error code 4"}, St};
+        error:badarg -> {reply, {error, server_not_reached, "Error code 5"}, St}
     end;
 
 % Sending message (from GUI, to channel)
