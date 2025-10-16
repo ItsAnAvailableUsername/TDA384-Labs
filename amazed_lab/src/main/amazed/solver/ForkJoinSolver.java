@@ -9,7 +9,7 @@ import java.util.concurrent.RecursiveTask;
 // SequentialSolver defines multiple unnecessary variables.
 // By extending RecursiveTask<List<Integer>> directly we can simplify the implementation.
 final public class ForkJoinSolver extends RecursiveTask<List<Integer>> {
-    // The ForkJoinSolver instances share only the same instances of maze and visited.
+    // The ForkJoinSolver instances share only the maze and visited instances.
     final private Maze maze;
     final private Set<Integer> visited;
     final private int start;
@@ -29,7 +29,7 @@ final public class ForkJoinSolver extends RecursiveTask<List<Integer>> {
         return parallelSearch();
     }
 
-    // As far as Iwe can tell, the instructions never specified that the players *have* to move anywhere, so they don't.
+    // As far as we can tell, the instructions never specified that the players *have* to move anywhere, so they don't.
     // Instead, they simply perform asexual reproduction and wait for their kids to do everything for them.
     // Question to teachers: is there a reason why parallelSearch is its own method rather than the body of compute?
     private List<Integer> parallelSearch() {
