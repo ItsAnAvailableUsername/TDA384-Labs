@@ -2,73 +2,54 @@ package amazed.solver;
 
 import amazed.maze.Maze;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.RecursiveTask;
 
-/**
- * <code>ForkJoinSolver</code> implements a solver for
- * <code>Maze</code> objects using a fork/join multi-thread
- * depth-first search.
- * <p>
- * Instances of <code>ForkJoinSolver</code> should be run by a
- * <code>ForkJoinPool</code> object.
- */
+// SequentialSolver defines multiple unnecessary variables.
+// By extending RecursiveTask<List<Integer>> directly we can simplify the implementation.
+public class ForkJoinSolver extends RecursiveTask<List<Integer>> {
+    // The ForkJoinSolver instances share only the same instances of maze and visited.
+    final private Maze maze;
+    final private Set<Integer> visited;
+    final private int start;
 
-
-public class ForkJoinSolver
-    extends SequentialSolver
-{
-    /**
-     * Creates a solver that searches in <code>maze</code> from the
-     * start node to a goal.
-     *
-     * @param maze   the maze to be searched
-     */
-    public ForkJoinSolver(Maze maze)
-    {
-        super(maze);
+    public ForkJoinSolver(final Maze maze, final int ignoredForkAfter) {
+        this(maze, new ConcurrentSkipListSet<>(), maze.start());
     }
 
-    /**
-     * Creates a solver that searches in <code>maze</code> from the
-     * start node to a goal, forking after a given number of visited
-     * nodes.
-     *
-     * @param maze        the maze to be searched
-     * @param forkAfter   the number of steps (visited nodes) after
-     *                    which a parallel task is forked; if
-     *                    <code>forkAfter &lt;= 0</code> the solver never
-     *                    forks new tasks
-     */
-    public ForkJoinSolver(Maze maze, int forkAfter)
-    {
-        this(maze);
-        this.forkAfter = forkAfter;
+    private ForkJoinSolver(final Maze maze, final Set<Integer> visited, final int start) {
+        this.maze = maze;
+        this.visited = visited;
+        this.start = start;
     }
 
-    /**
-     * Searches for and returns the path, as a list of node
-     * identifiers, that goes from the start node to a goal node in
-     * the maze. If such a path cannot be found (because there are no
-     * goals, or all goals are unreacheable), the method returns
-     * <code>null</code>.
-     *
-     * @return   the list of node identifiers from the start node to a
-     *           goal node in the maze; <code>null</code> if such a path cannot
-     *           be found.
-     */
     @Override
-    public List<Integer> compute()
-    {
+    public List<Integer> compute() {
         return parallelSearch();
     }
 
-    private List<Integer> parallelSearch()
-    {
+    // As far as Iwe can tell, the instructions never specified that the players *have* to move anywhere, so they don't.
+    // Instead, they simply perform asexual reproduction and wait for their kids to do everything for them.
+    // Question to teachers: is there a reason why parallelSearch is its own method rather than the body of compute?
+    private List<Integer> parallelSearch() {
+        maze.newPlayer(start);
+        if (maze.hasGoal(start)) {
+            return new LinkedList<>(Collections.singletonList(start));
+        }
+        visited.add(start);
+        for (final int neighbor : maze.neighbors(start)) {
+            if (visited.contains(neighbor)) {
+                continue;
+            }
+            final ForkJoinSolver child = new ForkJoinSolver(maze, visited, neighbor);
+            child.fork();
+            final List<Integer> result = child.join();
+            if (result != null) {
+                result.addFirst(start);
+                return result;
+            }
+        }
         return null;
     }
 }
