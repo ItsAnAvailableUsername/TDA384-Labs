@@ -8,7 +8,7 @@ import java.util.concurrent.RecursiveTask;
 
 // SequentialSolver defines multiple unnecessary variables.
 // By extending RecursiveTask<List<Integer>> directly we can simplify the implementation.
-public class ForkJoinSolver extends RecursiveTask<List<Integer>> {
+final public class ForkJoinSolver extends RecursiveTask<List<Integer>> {
     // The ForkJoinSolver instances share only the same instances of maze and visited.
     final private Maze maze;
     final private Set<Integer> visited;
