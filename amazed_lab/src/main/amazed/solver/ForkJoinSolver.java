@@ -38,12 +38,15 @@ final public class ForkJoinSolver extends RecursiveTask<List<Integer>> {
             return new LinkedList<>(Collections.singletonList(start));
         }
         visited.add(start);
+        final List<ForkJoinSolver> children = new LinkedList<>();
         for (final int neighbor : maze.neighbors(start)) {
-            if (visited.contains(neighbor)) {
-                continue;
+            if (!visited.contains(neighbor)) {
+                final ForkJoinSolver child = new ForkJoinSolver(maze, visited, neighbor);
+                child.fork();
+                children.add(child);
             }
-            final ForkJoinSolver child = new ForkJoinSolver(maze, visited, neighbor);
-            child.fork();
+        }
+        for (final ForkJoinSolver child : children) {
             final List<Integer> result = child.join();
             if (result != null) {
                 result.addFirst(start);
