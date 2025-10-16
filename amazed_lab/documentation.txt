@@ -1,0 +1,8 @@
+We did not extend SequentialSolver, as it had unnecessary amounts of state and overly permissive access modifiers.
+In particular, it defined the variables frontier and predecessor, and the function pathFromTo, which we did not use.
+
+We added a constructor allowing us to pass state into a ForkJoinSolver instance at its creation rather than modify it afterward.
+
+As many things as possible were made final and private to minimize potential problems.
+
+We removed the while loop from parallelSearch as each ForkJoinSolver instance only ever directly works with one node.
